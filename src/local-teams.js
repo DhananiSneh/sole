@@ -6,21 +6,42 @@ export function localTeams() {
     name: "local",
     sales: {
       async qualify(lead) {
-        return policy(lead) ?? { fit: true, reason: "The lead names a piece of work Sales can price." };
+        const blocked = policy(lead);
+        if (blocked) return blocked;
+        if (lead.line === "product") {
+          return { fit: true, reason: "The brief names a product this company can ship." };
+        }
+        return { fit: true, reason: "The lead names client work Sales can price." };
       },
       async offer(lead) {
+        const price = lead.budget === "Not stated" ? (lead.line === "product" ? "Set a price" : "Quote on request") : lead.budget;
+        if (lead.line === "product") {
+          return {
+            summary: lead.title,
+            scope: [
+              `Version one of: ${lead.title}`,
+              "The brief quoted on the product page",
+              "A customer price in the same folder",
+            ],
+            outOfScope: [
+              "Features the brief did not name",
+              "A sales team, and changes after the founder ships",
+            ],
+            price,
+          };
+        }
         return {
           summary: lead.title,
           scope: [
-            `A one-page website for: ${lead.title}`,
-            "The lead quoted on that page",
-            "This offer and an invoice in the same folder",
+            `The client system named in the lead: ${lead.title}`,
+            "The lead quoted on the delivery page",
+            "This offer and a client invoice",
           ],
           outOfScope: [
             "Work the lead did not ask for",
-            "A domain, hosting, and changes after handover",
+            "Hosting, a domain, and changes after handover",
           ],
-          price: lead.budget === "Not stated" ? "Quote on request" : lead.budget,
+          price,
         };
       },
     },
@@ -35,7 +56,7 @@ export function localTeams() {
           number: `INV-${lead.id}`,
           line: offer.summary,
           total: offer.price,
-          note: "Payable when the founder sends the folder.",
+          note: lead.line === "product" ? "Customers pay this when the founder ships." : "Payable when the founder sends the folder.",
         };
       },
     },

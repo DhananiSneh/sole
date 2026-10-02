@@ -77,43 +77,52 @@ export function createGrokTeams(apiKey = process.env.XAI_API_KEY, fetchImpl = gl
       async qualify(lead) {
         const blocked = policy(lead);
         if (blocked) return blocked;
-        const pack = await ask(
-          "qualify",
-          "You are Sales at Sole, a one-person studio. The studio delivers a one-page website, a written offer, and an invoice. Decide if this lead is that kind of work. Decline work that is not a page the studio can ship.",
-          lead.lead,
-        );
+        const system = lead.line === "product"
+          ? "You are Product at Sole, an IT company. This is the company's own software, not client work. Fit means Sole should ship it as a product. Decline briefs that are not software."
+          : "You are Sales at Sole, an IT company. This is service work for a client. Fit means the client wants software Sole can deliver. Decline work that is not software.";
+        const pack = await ask("qualify", system, lead.lead);
         if (typeof pack.fit !== "boolean" || typeof pack.reason !== "string") {
-          throw new Error("Sales did not return a decision");
+          throw new Error("The team did not return a decision");
         }
-        return { fit: pack.fit, reason: pack.reason.trim() || "Sales made a decision." };
+        return { fit: pack.fit, reason: pack.reason.trim() || "The team made a decision." };
       },
       async offer(lead) {
-        const price = lead.budget === "Not stated" ? "Quote on request" : lead.budget;
+        const fallback = lead.line === "product" ? "Set a price" : "Quote on request";
+        const price = lead.budget === "Not stated" ? fallback : lead.budget;
+        const system = lead.line === "product"
+          ? `You are Product at Sole. Write the version-one spec. price must be exactly ${JSON.stringify(price)}. scope is what ships now. outOfScope is what waits. Quote no other number.`
+          : `You are Sales at Sole. Write the client offer for this IT engagement. price must be exactly ${JSON.stringify(price)}. scope and outOfScope are short lists. Quote no other number.`;
         const pack = await ask(
           "offer",
-          `You are Sales at Sole. Write the offer for a one-page website. price must be exactly ${JSON.stringify(price)}. Quote no other number. scope and outOfScope are short lists.`,
-          `Lead:\n${lead.lead}\n\nPrice to use: ${price}`,
+          system,
+          `Brief:\n${lead.lead}\n\nPrice to use: ${price}`,
         );
         return { ...pack, price };
       },
     },
     studio: {
       async build(lead, offer) {
+        const system = lead.line === "product"
+          ? "You are Engineering at Sole, an IT product company. Return one complete HTML document in the html field. This page is the product. Quote the brief verbatim. Show the version-one scope, what is later, and the customer price exactly. No external images, fonts, or scripts."
+          : "You are Delivery at Sole, an IT services company. Return one complete HTML document in the html field. This page is the client delivery. Quote the lead verbatim. Show the scope, what is outside the work, and the price exactly. No external images, fonts, or scripts.";
         const pack = await ask(
           "page",
-          "You are Studio at Sole. Return one complete HTML document in the html field. Quote the lead verbatim. Show every scope line, every out-of-scope line, and the price exactly. No external images, fonts, or scripts.",
-          `Lead:\n${lead.lead}\n\nSummary: ${offer.summary}\nPrice: ${offer.price}\nScope:\n- ${offer.scope.join("\n- ")}\nOutside:\n- ${offer.outOfScope.join("\n- ")}`,
+          system,
+          `Brief:\n${lead.lead}\n\nSummary: ${offer.summary}\nPrice: ${offer.price}\nScope:\n- ${offer.scope.join("\n- ")}\nOutside:\n- ${offer.outOfScope.join("\n- ")}`,
         );
-        if (typeof pack.html !== "string" || !pack.html.trim()) throw new Error("Studio returned an empty page");
+        if (typeof pack.html !== "string" || !pack.html.trim()) throw new Error("The build team returned an empty page");
         return pack.html;
       },
     },
     books: {
       async invoice(lead, offer) {
+        const system = lead.line === "product"
+          ? `You are Accounts at Sole. Write the customer price line and a one-sentence note. total must be exactly ${JSON.stringify(offer.price)}.`
+          : `You are Accounts at Sole. Write the client invoice line and a one-sentence note. total must be exactly ${JSON.stringify(offer.price)}.`;
         const pack = await ask(
           "invoice",
-          `You are Books at Sole. Write the invoice line and a one-sentence note. total must be exactly ${JSON.stringify(offer.price)}.`,
-          `Work: ${offer.summary}\nPrice: ${offer.price}\nDue: ${lead.due}`,
+          system,
+          `Work: ${offer.summary}\nPrice: ${offer.price}\nDue: ${lead.due}\nBilling: ${lead.billing}`,
         );
         return {
           number: `INV-${lead.id}`,

@@ -4,23 +4,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sole</title>
-  <meta name="description" content="One founder. Five agent teams take a lead through an offer, a page, a review, and an invoice.">
+  <meta name="description" content="One founder runs an IT company. Services delivers client work. Products ships software the company owns.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main>
     <p class="eyebrow">One founder</p>
-    <h1>Five teams run the company.</h1>
-    <p class="lede">You bring a lead. Desk opens it. Sales writes the offer. Studio builds the page. Books writes the invoice. Review can hold the folder. You send it.</p>
-    <ol class="teams">
-      <li><span>Desk</span> Opens the lead and writes the handover.</li>
-      <li><span>Sales</span> Decides if the work fits, then prices it.</li>
-      <li><span>Studio</span> Builds the one-page site the client opens.</li>
-      <li><span>Books</span> Invoices the offer price, and no other number.</li>
-      <li><span>Review</span> Checks the folder without asking the writer.</li>
-    </ol>
-    <pre><code>node src/cli.js "A bakery needs a one-page website. Budget 40000 INR. Due Friday."</code></pre>
-    <p class="foot">Sales, Studio, and Books use Grok when <code>XAI_API_KEY</code> is set. Without a key, the same path runs locally. <a href="https://github.com/DhananiSneh/sole">Source</a></p>
+    <h1>An IT company with two lines.</h1>
+    <p class="lede">You bring the work. The teams carry it. Services is software for a client. Products is software you own.</p>
+    <div class="lines">
+      <section>
+        <h2>Services</h2>
+        <p class="line-note">Ends in an offer, a page, and an invoice you send.</p>
+        <ol class="teams">
+          <li><span>Desk</span> Opens the client lead.</li>
+          <li><span>Sales</span> Writes the offer and the price.</li>
+          <li><span>Delivery</span> Builds what the client asked for.</li>
+          <li><span>Accounts</span> Invoices that price.</li>
+          <li><span>Review</span> Can hold the folder.</li>
+        </ol>
+        <pre><code>node src/cli.js service "A clinic needs a booking site. Budget 80000 INR. Due in 3 weeks."</code></pre>
+      </section>
+      <section>
+        <h2>Products</h2>
+        <p class="line-note">Ends in a spec, a product, and a price you ship.</p>
+        <ol class="teams">
+          <li><span>Desk</span> Opens the product brief.</li>
+          <li><span>Product</span> Writes what version one includes.</li>
+          <li><span>Engineering</span> Builds the product.</li>
+          <li><span>Accounts</span> Sets the customer price.</li>
+          <li><span>Review</span> Can hold the ship.</li>
+        </ol>
+        <pre><code>node src/cli.js product "Ship an invoicing tool for freelancers. Price 499 INR a month."</code></pre>
+      </section>
+    </div>
+    <p class="foot">The writing teams use Grok when <code>XAI_API_KEY</code> is set. Without a key, the same paths run locally. <a href="https://github.com/DhananiSneh/sole">Source</a></p>
   </main>
 </body>
 </html>

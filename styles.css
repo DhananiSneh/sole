@@ -9,7 +9,7 @@ body {
   color: #e7ecdf;
   font: 18px/1.5 Georgia, "Iowan Old Style", serif;
 }
-main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+main { max-width: 980px; margin: 0 auto; padding: 72px 24px 96px; }
 .eyebrow {
   margin: 0;
   color: #d6e26a;
@@ -23,28 +23,35 @@ h1 {
   line-height: 0.98;
   font-weight: 500;
 }
-.lede { margin: 0 0 36px; color: #c9d2bc; max-width: 38em; }
+.lede { margin: 0 0 36px; color: #c9d2bc; max-width: 40em; }
+.lines { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; }
+.lines h2 { margin: 0; font-size: 32px; font-weight: 500; }
+.line-note { margin: 8px 0 12px; color: #c9d2bc; font: 15px/1.4 ui-sans-serif, system-ui, sans-serif; }
 .teams { list-style: none; margin: 0; padding: 0; }
 .teams li {
   display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 16px;
-  padding: 14px 0;
+  grid-template-columns: 118px 1fr;
+  gap: 12px;
+  padding: 12px 0;
   border-top: 1px solid rgba(231, 236, 223, 0.16);
-  font: 16px/1.4 ui-sans-serif, system-ui, sans-serif;
+  font: 15px/1.4 ui-sans-serif, system-ui, sans-serif;
 }
 .teams span { color: #d6e26a; }
+pre, code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 pre {
   margin: 28px 0 16px;
   padding: 16px;
-  overflow-x: auto;
   background: #0b0e0a;
   border-radius: 12px;
   color: #f4f7ea;
-  font: 14px/1.45 ui-monospace, "Cascadia Code", monospace;
+  font: 13px/1.45 ui-monospace, "Cascadia Code", monospace;
 }
 .foot { color: #aeb8a4; font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; }
 a { color: #d6e26a; }
-@media (max-width: 560px) {
+@media (max-width: 800px) {
+  .lines { grid-template-columns: 1fr; }
   .teams li { grid-template-columns: 1fr; gap: 4px; }
 }

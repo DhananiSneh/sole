@@ -10,6 +10,13 @@ export function leadNeedle(lead) {
   return escapeHtml(lead.lead.slice(0, 80));
 }
 
+function timing(lead) {
+  if (lead.line === "product") {
+    return lead.billing === "Monthly" ? "Billed monthly." : "Billed once.";
+  }
+  return `Due ${escapeHtml(lead.due)}.`;
+}
+
 export function buildPage(lead, offer) {
   const scope = offer.scope.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const outside = offer.outOfScope.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
@@ -56,17 +63,17 @@ export function buildPage(lead, offer) {
 </head>
 <body>
   <main>
-    <p class="eyebrow">Prepared for you</p>
+    <p class="eyebrow">${lead.line === "product" ? "Sole product" : "For the client"}</p>
     <h1>${escapeHtml(offer.summary)}</h1>
     <blockquote>${escapeHtml(lead.lead)}</blockquote>
-    <h2>Scope</h2>
+    <h2>${lead.line === "product" ? "Version one" : "Scope"}</h2>
     <ul>${scope}</ul>
-    <h2>Outside this work</h2>
+    <h2>${lead.line === "product" ? "Later" : "Outside this work"}</h2>
     <ul>${outside}</ul>
     <h2>Price</h2>
     <p class="price">${escapeHtml(offer.price)}</p>
-    <p>Due ${escapeHtml(lead.due)}.</p>
-    <footer>Studio built this page. The founder sends it.</footer>
+    <p>${timing(lead)}</p>
+    <footer>${lead.line === "product" ? "Engineering built this. The founder ships it." : "Delivery built this. The founder sends it."}</footer>
   </main>
 </body>
 </html>

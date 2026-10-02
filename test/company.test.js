@@ -3,6 +3,7 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { parseCommand } from "../src/args.js";
 import { runCompany } from "../src/company.js";
 import { createGrokTeams, extractJson, outputText } from "../src/grok-teams.js";
 import { intake } from "../src/intake.js";
@@ -132,6 +133,86 @@ test("Grok teams run Sales, Studio, and Books, and Review can still hold", async
   assert.deepEqual(seen, ["qualify", "offer", "page", "invoice"]);
   assert.equal(result.offer.price, "40000 INR");
   assert.equal(result.status, "held");
+});
+
+test("a service command and a product command choose different lines", () => {
+  assert.deepEqual(parseCommand(["node", "src/cli.js", "service", "A clinic needs a site."]), {
+    line: "service",
+    lead: "A clinic needs a site.",
+  });
+  assert.deepEqual(parseCommand(["node", "src/cli.js", "product", "Ship an invoicing tool."]), {
+    line: "product",
+    lead: "Ship an invoicing tool.",
+  });
+  assert.equal(parseCommand(["node", "src/cli.js", "A bakery needs a site."]).line, "service");
+});
+
+test("the product line ships a spec, a product page, and a customer price", async () => {
+  const root = await tempRoot();
+  const brief = "Ship an invoicing tool for freelancers. Price 499 INR a month.";
+  const result = await runCompany(brief, { teams: localTeams(), root, now: when, line: "product" });
+  assert.equal(result.status, "sent");
+  assert.equal(result.lead.line, "product");
+  assert.equal(result.lead.budget, "499 INR");
+  assert.equal(result.lead.billing, "Monthly");
+  const page = await readFile(path.join(result.dir, "site", "index.html"), "utf8");
+  const spec = await readFile(path.join(result.dir, "03-spec.md"), "utf8");
+  const price = await readFile(path.join(result.dir, "05-price.md"), "utf8");
+  const handover = await readFile(path.join(result.dir, "06-handover.md"), "utf8");
+  assert.match(page, /Sole product/);
+  assert.match(page, /invoicing tool for freelancers/);
+  assert.match(page, /Billed monthly/);
+  assert.match(spec, /Version one/);
+  assert.match(spec, /Team: Product/);
+  assert.match(price, /Price: 499 INR/);
+  assert.match(price, /Billing: Monthly/);
+  assert.match(price, /Team: Accounts/);
+  assert.match(handover, /founder can ship/);
+  await assert.rejects(readFile(path.join(result.dir, "05-invoice.md"), "utf8"));
+});
+
+test("Review holds a product page that drops the brief", async () => {
+  const root = await tempRoot();
+  const teams = localTeams();
+  teams.studio = { async build() { return "<!DOCTYPE html><html><title>Empty</title><p>499 INR</p></html>"; } };
+  const result = await runCompany("Ship an invoicing tool for freelancers. Price 499 INR a month.", {
+    teams,
+    root,
+    now: when,
+    line: "product",
+  });
+  assert.equal(result.status, "held");
+  const handover = await readFile(path.join(result.dir, "06-handover.md"), "utf8");
+  assert.match(handover, /does not ship it/);
+});
+
+test("Grok on the product line asks Product, Engineering, and Accounts", async () => {
+  const root = await tempRoot();
+  const brief = "Ship an invoicing tool for freelancers. Price 499 INR a month.";
+  const seen = [];
+  const fetchImpl = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    const name = body.text.format.name;
+    seen.push(body.input[0].content);
+    const packs = {
+      qualify: { fit: true, reason: "A product we can ship." },
+      offer: { summary: "Invoicing tool", scope: ["Send an invoice"], outOfScope: ["Payroll"], price: "1 INR" },
+      page: { html: `<!DOCTYPE html><html><title>Tool</title><p>${brief}</p><p>499 INR</p></html>` },
+      invoice: { line: "Invoicing tool", total: "499 INR", note: "Billed each month." },
+    };
+    return jsonResponse(packs[name]);
+  };
+  const result = await runCompany(brief, {
+    teams: createGrokTeams("test-key", fetchImpl),
+    root,
+    now: when,
+    line: "product",
+  });
+  assert.equal(result.status, "sent");
+  assert.equal(result.offer.price, "499 INR");
+  assert.match(seen[0], /You are Product/);
+  assert.match(seen[2], /You are Engineering/);
+  assert.match(seen[3], /You are Accounts/);
 });
 
 function jsonResponse(value) {
