@@ -1,0 +1,10 @@
+{
+  "name": "sole",
+  "private": true,
+  "type": "module",
+  "description": "One founder. Five agent teams take a lead through an offer, a page, a review, and an invoice.",
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test"
+  }
+}
